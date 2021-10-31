@@ -2,7 +2,7 @@ import { FaTrashAlt } from 'react-icons/fa';
 
 const LineItem = ({ item, handleDelete, handleCheck }) => {
   return (
-    <li className='item' key={item.id}>
+    <li className='item'>
       <input
         type='checkbox'
         // the following onChange call must use anonymous function format so we can pass an argument without the handleCheck function executing immediately. onChange={handleCheck(item.id)} would fire off immediately without user interaction
