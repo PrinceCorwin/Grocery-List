@@ -4,50 +4,65 @@ import AddItem from './AddItem';
 import SearchItem from './SearchItem';
 import Content from './Content';
 import Footer from './Footer';
+import { db } from './firebase-config';
+import { collection, getDocs } from 'firebase/firestore';
 import { useState, useEffect } from 'react';
 import apiRequest from './apiRequest';
 
 function App() {
-  const API_URL = 'http://localhost:3500/items';
+  // const API_URL = 'http://localhost:3500/items';
+  const itemsCollection = collection(db, 'Items');
 
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState('');
   const [search, setSearch] = useState('');
   const [fetchError, setFetchError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw Error('Did not receive expected data');
-        const listItems = await response.json();
-        setItems(listItems);
-        setFetchError(null);
-      } catch (err) {
-        setFetchError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
+    const getItems = async () => {
+      const data = await getDocs(itemsCollection);
+      const listItems = data.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+      console.log(listItems);
+      setItems(listItems);
     };
-    fetchItems();
+
+    getItems();
+    setIsLoading(false);
   }, []);
 
-  const addItem = async (item) => {
-    const id = items.length ? items.length + 1 : 1;
-    const myNewItem = { id, checked: false, item };
-    const listItems = [...items, myNewItem];
-    setItems(listItems);
+  // useEffect(() => {
+  //   const fetchItems = async () => {
+  //     try {
+  //       const response = await fetch(API_URL);
 
-    const postOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(myNewItem),
-    };
-    const result = await apiRequest(API_URL, postOptions);
-    if (result) setFetchError(result);
+  //       if (!response.ok) throw Error('Did not receive expected data');
+  //       const listItems = await response.json();
+
+  //       setItems(listItems);
+  //       setFetchError(null);
+  //     } catch (err) {
+  //       setFetchError(err.message);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+  //   fetchItems();
+  // }, []);
+
+  const addItem = async (item) => {
+    // const id = items.length ? items.length + 1 : 1;
+    // const myNewItem = { id, checked: false, item };
+    // const listItems = [...items, myNewItem];
+    // setItems(listItems);
+    // const postOptions = {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify(myNewItem),
+    // };
+    // const result = await apiRequest(API_URL, postOptions);
+    // if (result) setFetchError(result);
   };
 
   const handleCheck = async (id) => {
@@ -55,27 +70,26 @@ function App() {
       item.id === id ? { ...item, checked: !item.checked } : item
     );
     setItems(listItems);
-
-    const myItem = listItems.filter((item) => item.id === id);
-    const updateOptions = {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ checked: myItem[0].checked }),
-    };
-    const reqUrl = `${API_URL}/${id}`;
-    const result = await apiRequest(reqUrl, updateOptions);
-    if (result) setFetchError(result);
+    // const myItem = listItems.filter((item) => item.id === id);
+    // const updateOptions = {
+    //   method: 'PATCH',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify({ checked: myItem[0].checked }),
+    // };
+    // const reqUrl = `${API_URL}/${id}`;
+    // const result = await apiRequest(reqUrl, updateOptions);
+    // if (result) setFetchError(result);
   };
 
   const handleDelete = async (id) => {
-    const listItems = items.filter((item) => item.id !== id);
-    setItems(listItems);
-    const deleteOptions = { method: 'DELETE' };
-    const reqUrl = `${API_URL}/${id}`;
-    const result = await apiRequest(reqUrl, deleteOptions);
-    if (result) setFetchError(result);
+    // const listItems = items.filter((item) => item.id !== id);
+    // setItems(listItems);
+    // const deleteOptions = { method: 'DELETE' };
+    // const reqUrl = `${API_URL}/${id}`;
+    // const result = await apiRequest(reqUrl, deleteOptions);
+    // if (result) setFetchError(result);
   };
 
   const handleSubmit = (e) => {
@@ -100,7 +114,7 @@ function App() {
         {!fetchError && !isLoading && (
           <Content
             items={items.filter((item) =>
-              item.item.toLowerCase().includes(search.toLowerCase())
+              item.desc.toLowerCase().includes(search.toLowerCase())
             )}
             handleDelete={handleDelete}
             handleCheck={handleCheck}

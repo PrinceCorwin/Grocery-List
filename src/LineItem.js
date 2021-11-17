@@ -15,13 +15,13 @@ const LineItem = ({ item, handleDelete, handleCheck }) => {
           item.checked ? { textDecoration: 'line-through', color: 'red' } : null
         }
       >
-        {item.item}
+        {item.desc}
       </label>
       <FaTrashAlt
         role='button'
         tabIndex='0'
         onClick={() => handleDelete(item.id)}
-        aria-label={`Delete ${item.item}`}
+        aria-label={`Delete ${item.desc}`}
       />
     </li>
   );
