@@ -5,12 +5,18 @@ import SearchItem from './SearchItem';
 import Content from './Content';
 import Footer from './Footer';
 import { db } from './firebase-config';
-import { collection, getDocs } from 'firebase/firestore';
+import {
+  doc,
+  setDoc,
+  updateDoc,
+  collection,
+  getDocs,
+  deleteDoc,
+} from 'firebase/firestore';
 import { useState, useEffect } from 'react';
-import apiRequest from './apiRequest';
+// import apiRequest from './apiRequest';
 
 function App() {
-  // const API_URL = 'http://localhost:3500/items';
   const itemsCollection = collection(db, 'Items');
 
   const [items, setItems] = useState([]);
@@ -18,51 +24,63 @@ function App() {
   const [search, setSearch] = useState('');
   const [fetchError, setFetchError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  useEffect(() => {
-    const getItems = async () => {
-      const data = await getDocs(itemsCollection);
-      const listItems = data.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
-      console.log(listItems);
-      setItems(listItems);
-    };
-
-    getItems();
-    setIsLoading(false);
-  }, []);
 
   // useEffect(() => {
-  //   const fetchItems = async () => {
-  //     try {
-  //       const response = await fetch(API_URL);
+  //   const getItems = async () => {
+  //     const data = await getDocs(itemsCollection);
+  //     const listItems = data.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+  //     setIsLoading(false);
 
-  //       if (!response.ok) throw Error('Did not receive expected data');
-  //       const listItems = await response.json();
-
-  //       setItems(listItems);
-  //       setFetchError(null);
-  //     } catch (err) {
-  //       setFetchError(err.message);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
+  //     setItems(listItems);
   //   };
-  //   fetchItems();
+
+  //   getItems();
   // }, []);
 
+  useEffect(() => {
+    const getItems = async () => {
+      try {
+        const data = await getDocs(itemsCollection);
+
+        const listItems = data.docs.map((doc) => ({
+          ...doc.data(),
+          id: doc.id,
+        }));
+
+        setItems(listItems);
+        setFetchError(null);
+      } catch (err) {
+        setFetchError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    getItems();
+  }, []);
+
   const addItem = async (item) => {
-    // const id = items.length ? items.length + 1 : 1;
-    // const myNewItem = { id, checked: false, item };
-    // const listItems = [...items, myNewItem];
-    // setItems(listItems);
-    // const postOptions = {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(myNewItem),
-    // };
-    // const result = await apiRequest(API_URL, postOptions);
-    // if (result) setFetchError(result);
+    const id = items.length ? items.length + 1 : 1;
+    const newItemDate = new Date();
+    const dateStr = `${
+      newItemDate.getMonth() + 1
+    }/${newItemDate.getDate()}/${newItemDate.getFullYear()}`;
+
+    const myNewItem = {
+      id,
+      checked: false,
+      desc: item,
+      date: dateStr,
+      author: 'Steve',
+    };
+    const listItems = [...items, myNewItem];
+    setItems(listItems);
+
+    await setDoc(doc(db, 'Items', `${myNewItem.id}`), {
+      desc: myNewItem.desc,
+      author: 'Steve',
+      checked: false,
+      date: dateStr,
+    });
   };
 
   const handleCheck = async (id) => {
@@ -70,26 +88,20 @@ function App() {
       item.id === id ? { ...item, checked: !item.checked } : item
     );
     setItems(listItems);
-    // const myItem = listItems.filter((item) => item.id === id);
-    // const updateOptions = {
-    //   method: 'PATCH',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({ checked: myItem[0].checked }),
-    // };
-    // const reqUrl = `${API_URL}/${id}`;
-    // const result = await apiRequest(reqUrl, updateOptions);
-    // if (result) setFetchError(result);
+    const myItem = listItems.filter((item) => item.id === id);
+    console.log(myItem[0].checked);
+    const updatedDoc = doc(db, 'Items', id);
+
+    await updateDoc(updatedDoc, {
+      checked: myItem[0].checked,
+    });
   };
 
   const handleDelete = async (id) => {
-    // const listItems = items.filter((item) => item.id !== id);
-    // setItems(listItems);
-    // const deleteOptions = { method: 'DELETE' };
-    // const reqUrl = `${API_URL}/${id}`;
-    // const result = await apiRequest(reqUrl, deleteOptions);
-    // if (result) setFetchError(result);
+    const listItems = items.filter((item) => item.id !== id);
+    setItems(listItems);
+    const deletedDoc = doc(db, 'Items', id);
+    await deleteDoc(deletedDoc);
   };
 
   const handleSubmit = (e) => {

@@ -1,6 +1,10 @@
 import { FaTrashAlt } from 'react-icons/fa';
 
 const LineItem = ({ item, handleDelete, handleCheck }) => {
+  // const itemDate = item.date.toDate();
+  // const dateStr = `${
+  //   itemDate.getMonth() + 1
+  // }/${itemDate.getDate()}/${itemDate.getFullYear()}`;
   return (
     <li className='item'>
       <input
@@ -15,7 +19,11 @@ const LineItem = ({ item, handleDelete, handleCheck }) => {
           item.checked ? { textDecoration: 'line-through', color: 'red' } : null
         }
       >
-        {item.desc}
+        <div>{item.desc}</div>
+        <div className='dateAuthor'>
+          <span>Added {item.date}</span>
+          <span> by: {item.author}</span>
+        </div>
       </label>
       <FaTrashAlt
         role='button'
