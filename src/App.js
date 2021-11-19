@@ -4,11 +4,20 @@ import AddItem from './AddItem';
 import SearchItem from './SearchItem';
 import Content from './Content';
 import Footer from './Footer';
+import { db } from './firebase-config';
+import {
+  doc,
+  setDoc,
+  updateDoc,
+  collection,
+  getDocs,
+  deleteDoc,
+} from 'firebase/firestore';
 import { useState, useEffect } from 'react';
-import apiRequest from './apiRequest';
+// import apiRequest from './apiRequest';
 
 function App() {
-  const API_URL = 'http://localhost:3500/items';
+  const itemsCollection = collection(db, 'Items');
 
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState('');
@@ -16,12 +25,28 @@ function App() {
   const [fetchError, setFetchError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // useEffect(() => {
+  //   const getItems = async () => {
+  //     const data = await getDocs(itemsCollection);
+  //     const listItems = data.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+  //     setIsLoading(false);
+
+  //     setItems(listItems);
+  //   };
+
+  //   getItems();
+  // }, []);
+
   useEffect(() => {
-    const fetchItems = async () => {
+    const getItems = async () => {
       try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw Error('Did not receive expected data');
-        const listItems = await response.json();
+        const data = await getDocs(itemsCollection);
+
+        const listItems = data.docs.map((doc) => ({
+          ...doc.data(),
+          id: doc.id,
+        }));
+
         setItems(listItems);
         setFetchError(null);
       } catch (err) {
@@ -30,24 +55,32 @@ function App() {
         setIsLoading(false);
       }
     };
-    fetchItems();
+    getItems();
   }, []);
 
   const addItem = async (item) => {
     const id = items.length ? items.length + 1 : 1;
-    const myNewItem = { id, checked: false, item };
+    const newItemDate = new Date();
+    const dateStr = `${
+      newItemDate.getMonth() + 1
+    }/${newItemDate.getDate()}/${newItemDate.getFullYear()}`;
+
+    const myNewItem = {
+      id,
+      checked: false,
+      desc: item,
+      date: dateStr,
+      author: 'Steve',
+    };
     const listItems = [...items, myNewItem];
     setItems(listItems);
 
-    const postOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(myNewItem),
-    };
-    const result = await apiRequest(API_URL, postOptions);
-    if (result) setFetchError(result);
+    await setDoc(doc(db, 'Items', `${myNewItem.id}`), {
+      desc: myNewItem.desc,
+      author: 'Steve',
+      checked: false,
+      date: dateStr,
+    });
   };
 
   const handleCheck = async (id) => {
@@ -55,27 +88,20 @@ function App() {
       item.id === id ? { ...item, checked: !item.checked } : item
     );
     setItems(listItems);
-
     const myItem = listItems.filter((item) => item.id === id);
-    const updateOptions = {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ checked: myItem[0].checked }),
-    };
-    const reqUrl = `${API_URL}/${id}`;
-    const result = await apiRequest(reqUrl, updateOptions);
-    if (result) setFetchError(result);
+    console.log(myItem[0].checked);
+    const updatedDoc = doc(db, 'Items', id);
+
+    await updateDoc(updatedDoc, {
+      checked: myItem[0].checked,
+    });
   };
 
   const handleDelete = async (id) => {
     const listItems = items.filter((item) => item.id !== id);
     setItems(listItems);
-    const deleteOptions = { method: 'DELETE' };
-    const reqUrl = `${API_URL}/${id}`;
-    const result = await apiRequest(reqUrl, deleteOptions);
-    if (result) setFetchError(result);
+    const deletedDoc = doc(db, 'Items', id);
+    await deleteDoc(deletedDoc);
   };
 
   const handleSubmit = (e) => {
@@ -100,7 +126,7 @@ function App() {
         {!fetchError && !isLoading && (
           <Content
             items={items.filter((item) =>
-              item.item.toLowerCase().includes(search.toLowerCase())
+              item.desc.toLowerCase().includes(search.toLowerCase())
             )}
             handleDelete={handleDelete}
             handleCheck={handleCheck}
