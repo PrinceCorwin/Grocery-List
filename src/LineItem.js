@@ -9,9 +9,9 @@ const LineItem = ({ item, handleDelete, handleCheck }) => {
     <li className='item'>
       <input
         type='checkbox'
+        checked={item.checked}
         // the following onChange call must use anonymous function format so we can pass an argument without the handleCheck function executing immediately. onChange={handleCheck(item.id)} would fire off immediately without user interaction
         onChange={() => handleCheck(item.id)}
-        checked={item.checked}
       />
       <label
         onDoubleClick={() => handleCheck(item.id)}

@@ -25,18 +25,6 @@ function App() {
   const [fetchError, setFetchError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // useEffect(() => {
-  //   const getItems = async () => {
-  //     const data = await getDocs(itemsCollection);
-  //     const listItems = data.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
-  //     setIsLoading(false);
-
-  //     setItems(listItems);
-  //   };
-
-  //   getItems();
-  // }, []);
-
   useEffect(() => {
     const getItems = async () => {
       try {
@@ -56,24 +44,25 @@ function App() {
       }
     };
     getItems();
-  }, []);
+  }, [itemsCollection]);
 
   const addItem = async (item) => {
-    const id = items.length ? items.length + 1 : 1;
+    const id = items.length ? Number(items[items.length - 1].id) + 1 : 1;
     const newItemDate = new Date();
     const dateStr = `${
       newItemDate.getMonth() + 1
     }/${newItemDate.getDate()}/${newItemDate.getFullYear()}`;
 
     const myNewItem = {
-      id,
+      id: id,
       checked: false,
       desc: item,
       date: dateStr,
       author: 'Steve',
     };
-    const listItems = [...items, myNewItem];
-    setItems(listItems);
+    // console.log(myNewItem);
+    // const listItems = [...items, myNewItem];
+    // setItems(listItems);
 
     await setDoc(doc(db, 'Items', `${myNewItem.id}`), {
       desc: myNewItem.desc,
@@ -84,22 +73,22 @@ function App() {
   };
 
   const handleCheck = async (id) => {
-    const listItems = items.map((item) =>
-      item.id === id ? { ...item, checked: !item.checked } : item
-    );
-    setItems(listItems);
-    const myItem = listItems.filter((item) => item.id === id);
-    console.log(myItem[0].checked);
+    // const listItems = items.map((item) =>
+    //   item.id === id ? { ...item, checked: !item.checked } : item
+    // );
+    // setItems(listItems);
+    const myItem = items.filter((item) => item.id === id);
+    // console.log(myItem[0].checked);
     const updatedDoc = doc(db, 'Items', id);
 
     await updateDoc(updatedDoc, {
-      checked: myItem[0].checked,
+      checked: !myItem[0].checked,
     });
   };
 
   const handleDelete = async (id) => {
-    const listItems = items.filter((item) => item.id !== id);
-    setItems(listItems);
+    // const listItems = items.filter((item) => item.id !== id);
+    // setItems(listItems);
     const deletedDoc = doc(db, 'Items', id);
     await deleteDoc(deletedDoc);
   };
