@@ -45,7 +45,7 @@ function App() {
     };
     getItems();
   }, [itemsCollection]);
-
+  console.log(items);
   const addItem = async (item) => {
     const id = items.length ? Number(items[items.length - 1].id) + 1 : 1;
     const newItemDate = new Date();
